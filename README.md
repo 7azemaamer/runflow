@@ -18,3 +18,12 @@ git clone https://github.com/7azemaamer/runflow.git
 npm install
 npm run dev
 ```
+
+## Mock Backend (JSON Server)
+
+To simulate backend workflows, you can use JSON Server.
+
+```bash
+npm install -g json-server
+json-server --watch db.json --port 4000
+```
