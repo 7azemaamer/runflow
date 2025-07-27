@@ -1,4 +1,41 @@
 {
-  "workflows": [],
+  "workflows": [
+    {
+      "id": "fabf",
+      "name": "test",
+      "type": "Messages",
+      "description": "test",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "id": "5616",
+      "name": "Rhea Lyons",
+      "type": "Data",
+      "description": "Pariatur Nulla ut q",
+      "nodes": [
+        {
+          "id": "n1",
+          "position": { "x": 0, "y": 0 },
+          "data": { "label": "Node 1" },
+          "type": "custom"
+        },
+        {
+          "id": "n2",
+          "position": { "x": 100, "y": 100 },
+          "data": { "label": "Node 2" },
+          "type": "custom"
+        }
+      ],
+      "edges": [
+        {
+          "id": "n1-n2",
+          "source": "n1",
+          "target": "n2",
+          "label": "connects with"
+        }
+      ]
+    }
+  ],
   "executions": []
 }

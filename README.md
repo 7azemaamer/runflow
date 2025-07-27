@@ -15,6 +15,6 @@ Drag. Connect. Automate.
 
 ```bash
 git clone https://github.com/7azemaamer/runflow.git
-pnpm/npm install
-pnpm dev \/ npm run dev
+npm install
+npm run dev
 ```
