@@ -1,9 +1,33 @@
 "use client";
 import { useWorkflowStore } from "@/store/useWorkflowStore";
 import { useFormik } from "formik";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { JSX, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  IoAdd as Plus,
+  IoGitNetworkOutline as Workflow,
+  IoTrashOutline as Trash2,
+  IoEyeOutline as Eye,
+  IoSparklesOutline as Sparkles,
+} from "react-icons/io5";
+import Swal from "sweetalert2";
 
 export default function WorkflowsPage(): JSX.Element {
   const [showAddPopup, setShowAddPopup] = useState(false);
@@ -14,7 +38,7 @@ export default function WorkflowsPage(): JSX.Element {
 
   useEffect(() => {
     fetchWorkflows();
-  }, []);
+  }, [fetchWorkflows]);
 
   // Add new workflow
   const handleSubmit = async ({
@@ -49,178 +73,232 @@ export default function WorkflowsPage(): JSX.Element {
     onSubmit: handleSubmit,
   });
 
+  // delete popup
+  const customSwal = Swal.mixin({
+    customClass: {
+      confirmButton: "bg-green-500 text-white rounded-md px-2 py-1 mx-1",
+      cancelButton: "bg-red-500 text-white rounded-md px-2 py-1",
+    },
+    buttonsStyling: false,
+  });
+
   // Delete workflow
   const handleDelete = async (id: string) => {
     try {
-      await deleteWorkflow(id);
+      customSwal
+        .fire({
+          title: "Are you sure?",
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "No, cancel!",
+          reverseButtons: true,
+        })
+        .then(async (result) => {
+          if (result.isConfirmed) {
+            await deleteWorkflow(id);
+            customSwal.fire({
+              title: "Deleted!",
+              text: "Your file has been deleted.",
+              icon: "success",
+            });
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            customSwal.fire({
+              title: "Cancelled",
+              text: "Your workflow is safe :)",
+              icon: "error",
+            });
+          }
+        });
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <>
-      <div id="workflows_container">
-        <div className="heading">
-          <h1 className="text-3xl font-bold flex text-teal-500 gap-2">
-            <Image
-              alt="Folder Icon"
-              src="/icons/file.svg"
-              width={24}
-              height={24}
-            />
-            Workflows
-          </h1>
-          <p className="text-slate-400 mt-2">
-            Here you can view and manage your saved workflows.
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-sm border border-cyan-500/30">
+              <Workflow className="w-8 h-8 text-cyan-400" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Workflows
+            </h1>
+          </div>
+          <p className="text-slate-400 text-lg ml-14">
+            Design, automate, and orchestrate your digital processes
           </p>
         </div>
-        <div className="workflow-item border-1 border-slate-400 my-2"></div>
-        <div id="workflows" className="mt-4 grid grid-cols-12 gap-4">
-          <button
+
+        {/* Workflows Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Create New Workflow Card */}
+          <Card
+            className="group hover:scale-[1.02] transition-all duration-300 cursor-pointer border-dashed border-2 border-cyan-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20"
             onClick={() => setShowAddPopup(true)}
-            className="workflow-item border border-slate-400 col-span-12 md:col-span-4 lg:col-span-2 p-4 rounded flex flex-col gap-2 cursor-pointer justify-center items-center"
           >
-            <Image
-              src={"/icons/add.svg"}
-              width={100}
-              height={100}
-              alt="Close Icon"
-            />
-            <h3>Create Workflow</h3>
-          </button>
-          {workflows &&
-            workflows.map((workflow) => {
-              return (
-                <>
-                  <div className="workflow-item border border-slate-400 col-span-12 md:col-span-4 lg:col-span-2 p-4 rounded flex flex-col gap-2 cursor-pointer">
-                    <div className="flex justify-between">
-                      <h3 className="text-xl font-bold">{workflow.name}</h3>
-                      <p className="bg-teal-500 text-black px-2 rounded-full">
-                        {workflow.type}
-                      </p>
-                    </div>
-                    <p className="text-justify leading-1">
-                      {(workflow?.description as string)
-                        .split(" ")
-                        .slice(0, 20)
-                        .join(" ")}
-                    </p>
-                    <div className="mt-auto flex gap-2">
-                      <button
-                        onClick={() => handleDelete(workflow.id)}
-                        className="bg-red-900 text-white rounded-xl py-1 px-2 w-full"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => router.push(`/workflows/${workflow.id}`)}
-                        className="bg-teal-900 text-white rounded-xl py-1 px-2 w-full"
-                      >
-                        View
-                      </button>
-                    </div>
-                  </div>
-                </>
-              );
-            })}
+            <CardContent className="flex flex-col items-center justify-center h-48 p-6">
+              <div className="p-4 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 mb-4 hover:translate-1 transition-transform duration-300">
+                <Plus className="w-8 h-8 text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-300 group-hover:text-cyan-400 transition-colors">
+                Create Workflow
+              </h3>
+              <p className="text-sm text-slate-500 mt-1 text-center">
+                Start building something amazing
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Existing Workflows */}
+          {workflows?.map((workflow) => (
+            <Card
+              key={workflow.id}
+              className="group hover:translate-1 transition-all duration-300 cursor-pointer bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-sm border border-slate-700/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between mb-2">
+                  <CardTitle className="text-lg font-semibold text-slate-200 group-hover:text-cyan-400 transition-colors line-clamp-1">
+                    {workflow.name}
+                  </CardTitle>
+                  <Badge
+                    variant="secondary"
+                    className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border-cyan-500/30 shrink-0"
+                  >
+                    {workflow.type}
+                  </Badge>
+                </div>
+                <CardDescription className="text-slate-400 line-clamp-3 text-sm">
+                  {(workflow?.description as string)
+                    ?.split(" ")
+                    .slice(0, 15)
+                    .join(" ")}
+                  {(workflow?.description as string)?.split(" ").length > 15 &&
+                    "..."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(workflow.id);
+                    }}
+                    className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/workflows/${workflow.id}`);
+                    }}
+                    className="flex-1 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 border border-cyan-500/20 hover:border-cyan-500/40"
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    View
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
-      {/* Popup components */}
-      {showAddPopup && (
-        <div
-          id="add_workflow"
-          className="fixed inset-0 z-50 bg-slate-800/75 backdrop-blur-sm flex items-start justify-center overflow-auto"
-        >
-          <div className="bg-white dark:bg-slate-900 mt-24 rounded-xl p-6 w-full max-w-xl shadow-lg relative">
-            {/* Floating Cancel */}
-            <button
-              onClick={() => setShowAddPopup(false)}
-              className="absolute top-4 right-4"
-            >
-              <Image
-                src={"/icons/close.svg"}
-                width={24}
-                height={24}
-                alt="Close Icon"
-              />
-            </button>
+      {/* Create Workflow Dialog */}
+      <Dialog open={showAddPopup} onOpenChange={setShowAddPopup}>
+        <DialogContent className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 backdrop-blur-sm max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-cyan-400" />
+              Create New Workflow
+            </DialogTitle>
+          </DialogHeader>
 
-            <p className="text-2xl font-bold text-teal-500 mb-4">
-              Add New Workflow
-            </p>
-
-            {/* Workflows Form */}
-            <form onSubmit={formik.handleSubmit} className="space-y-4">
-              {/* Name Field */}
-              <div className="flex items-center">
-                <label
-                  htmlFor="name"
-                  className="bg-teal-400 border border-teal-400 text-black px-3 py-2 rounded-l-xl text-xl"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                  value={formik.values.name}
-                  className="border border-teal-400 rounded-r-xl text-xl px-3 py-2 w-full outline-none"
-                  placeholder="Workflow name"
-                  required
-                />
-              </div>
-
-              {/* Type Field */}
-              <div className="flex items-center">
-                <label
-                  htmlFor="type"
-                  className="bg-teal-400 border border-teal-400 text-black px-3 py-2 rounded-l-xl text-xl"
-                >
-                  Type
-                </label>
-                <select
-                  name="type"
-                  id="type"
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                  value={formik.values.type}
-                  className="border border-teal-400 rounded-r-xl text-xl px-3 py-2 w-full outline-none"
-                  required
-                >
-                  <option value="">Select type</option>
-                  <option value="Messages">Messages</option>
-                  <option value="Data">Data</option>
-                  <option value="Email">Email</option>
-                </select>
-              </div>
-
-              {/* Description Field */}
-              <div>
-                <textarea
-                  name="description"
-                  placeholder="Description (optional)"
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                  value={formik.values.description}
-                  className="w-full p-3 border border-teal-400 rounded-xl outline-none resize-none"
-                  rows={4}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white text-xl py-2 rounded-xl font-semibold transition-all"
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
+            {/* Name Field */}
+            <div className="space-y-2">
+              <label
+                htmlFor="name"
+                className="text-sm font-medium text-slate-300"
               >
-                Create Workflow
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
+                Workflow Name
+              </label>
+              <Input
+                type="text"
+                name="name"
+                id="name"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                value={formik.values.name}
+                placeholder="Enter workflow name"
+                className="bg-slate-800/50 border-slate-600/50 text-slate-200 placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                required
+              />
+            </div>
+
+            {/* Type Field */}
+            <div className="space-y-2">
+              <label
+                htmlFor="type"
+                className="text-sm font-medium text-slate-300"
+              >
+                Workflow Type
+              </label>
+              <select
+                name="type"
+                id="type"
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                value={formik.values.type}
+                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600/50 rounded-md text-slate-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
+                required
+              >
+                <option value="">Select type</option>
+                <option value="Messages">Messages</option>
+                <option value="Data">Data</option>
+                <option value="Email">Email</option>
+              </select>
+            </div>
+
+            {/* Description Field */}
+            <div className="space-y-2">
+              <label
+                htmlFor="description"
+                className="text-sm font-medium text-slate-300"
+              >
+                Description (Optional)
+              </label>
+              <Textarea
+                name="description"
+                placeholder="Describe what this workflow does..."
+                onBlur={formik.handleBlur}
+                onChange={formik.handleChange}
+                value={formik.values.description}
+                className="bg-slate-800/50 border-slate-600/50 text-slate-200 placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 resize-none"
+                rows={4}
+              />
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-2 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Workflow
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
